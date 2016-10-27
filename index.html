@@ -119,8 +119,6 @@
 				}
 			});		
 
-			$messageForm.load()
-
 			$messageForm.submit(function(e){
 				var msg = $message.val();
             	if(msg && msg != lastMessage){
@@ -129,8 +127,8 @@
 					socket.emit('send message', $message.val().split("\n").join('<br/>'), function(data){
 
 						$chat.append('<div class="well" id="error">'+data+'</div>');
+            			scrollToBot();	
 					});
-            		scrollToBot();
 				}		
 
 				$message.val('');

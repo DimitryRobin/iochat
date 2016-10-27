@@ -4537,8 +4537,8 @@ a.thumbnail.active, a.thumbnail:focus, a.thumbnail:hover {
     padding: 4px 15px;
     margin-bottom: 1px;
     background-color: #fff;
-    border: 1px solid #ddd;
-    color: #337ab7;
+    border: 1px solid #cacaca;
+    color: #cacaca;
     border-top-right-radius: 10px;
     border-bottom-left-radius: 10px;
     width: 350px
