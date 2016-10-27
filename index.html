@@ -1,0 +1,127 @@
+<html>
+<head>
+	<title>IO Chat</title>
+    <link rel='stylesheet' type="text/css" href='/CSS/style.css'/>
+	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<style type="text/css">
+		body{
+			margin-top:30px;
+		}
+
+		#messageArea{
+			display:none;
+		}
+	</style>	
+</head>
+<body>
+	<div class="container">
+		<div id="userFormArea" class="row">
+			<div class="col-md-12">
+				<form id="userForm">
+					<div class="form-group">
+						<label>Entrez un nom d'utilisateur</label>
+						<input class="form-control" id="username" autofocus required />
+						<br />
+						<input type="submit" class="btn btn-primary" value="Se connecter">
+					</div>
+				</form>
+			</div>
+		</div>
+		<div id="messageArea" class="row">
+			<div class="col-md-4">
+				<div class="well">
+					<h3>Utilisateur(s) en ligne</h3>
+					<ul class="list-group" id="users"></ul>
+				</div>
+			</div>
+			<div class="col-md-8">
+				<div class="chat" id="chat"></div>
+
+				<form id="messageForm">
+					<div class="form-group">
+						<label>Entrez un message</label>
+						<textarea class="form-control" id="message" required></textarea>
+						<br />
+						<input type="submit" class="btn btn-primary" value="Envoyer">
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		$(function(){
+			var socket = io.connect('http://10.2.8.32:8080');
+			var $messageForm = $('#messageForm');
+			var $message = $('#message');
+			var $chat = $('#chat');
+			var $messageArea = $('#messageArea');
+			var $userFormArea = $('#userFormArea');
+			var $userForm = $('#userForm');
+			var $users = $('#users');
+			var $username = $('#username');	
+
+			// Pour éviter le spam et les chaines vides
+        	var lastMessage = '';
+
+			$message.keydown(function(event){ 
+				if (event.keyCode == 13){        
+			        if(event.shiftKey){
+			            event.stopPropagation();
+			        } else {
+			        	if (event.preventDefault)
+			        	{
+			        		event.preventDefault();
+			        		$(messageForm).submit(); 
+			        		return false;
+			        	} 			            
+			        }
+				}
+			});		
+
+			$messageForm.submit(function(e){
+				var msg = $message.val();
+            	if(msg && msg != lastMessage){
+	                lastMessage = msg;
+					e.preventDefault();
+					socket.emit('send message', $message.val().split("\n").join('<br/>'));
+				}		
+
+				$message.val('');
+				return false;
+			});
+
+			socket.on('new message', function(data){
+				$chat.append('<div class="well"><strong>'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'</div>');
+            	scrollToBot();
+			});
+
+			$userForm.submit(function(e){
+				e.preventDefault();
+				socket.emit('new user', $username.val(), function(data){
+					if(data){
+						$userFormArea.hide();
+						$messageArea.show();
+						$message.focus();
+					}
+				});
+				$username.val('');
+			});
+
+			socket.on('get users', function(data){
+				var html = '';
+				for (i = 0; i< data.length; i++)
+				{
+					html += '<li class="list-group-item">'+data[i]+'</li>';
+				}
+				$users.html(html);
+			});
+		});
+
+        function scrollToBot(){
+            $('body').scrollTop($(document).height());
+        }
+	</script>
+</body>
+</html>
