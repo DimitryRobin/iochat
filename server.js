@@ -41,10 +41,10 @@ io.sockets.on('connection', function(socket){
 					users[socket.username].emit('whisperExpediteur', {msg: msg, user: name});
 					console.log('Chuchotement de '+socket.username+' à '+name+'. Message: '+msg);
 				} else{
-					callback("Erreur! Entrez un utilisateur valide.");
+					callback("<b>Erreur</b>: Entrez un utilisateur valide.");
 				}
 			} else{
-				callback("Erreur! Entrez un message valide s'il vous plaît.")
+				callback("<b>Erreur</b>: Entrez un message valide s'il vous plaît.")
 			}
 		} else{
 			io.sockets.emit('new message', {msg: msg, user: socket.username});

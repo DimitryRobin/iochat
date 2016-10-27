@@ -121,15 +121,22 @@
 
 			$messageForm.submit(function(e){
 				var msg = $message.val();
-            	if(msg && msg != lastMessage){
-	                lastMessage = msg;
-					e.preventDefault();
-					socket.emit('send message', $message.val().split("\n").join('<br/>'), function(data){
-
-						$chat.append('<div class="well" id="error">'+data+'</div>');
-            			scrollToBot();	
-					});
-				}		
+            	if(msg && msg.trim() != ""){
+	                if(msg != lastMessage){
+	                	lastMessage = msg;
+						e.preventDefault();
+						socket.emit('send message', $message.val().split("\n").join('<br/>'), function(data){
+							$chat.append('<div class="well" id="error">'+data+'</div>');
+	            			scrollToBot();	
+						});
+	                } else{
+	                	$chat.append('<div class="well" id="error"><b>Erreur</b>: Le message est le même que le précédent.</div>');
+	            		scrollToBot();	
+	                }
+				} else{
+					$chat.append('<div class="well" id="error"><b>Erreur</b>: Le message est vide.</div>');
+	            	scrollToBot();	
+				}
 
 				$message.val('');
 				return false;
@@ -157,17 +164,23 @@
 
 			$userForm.submit(function(e){
 				e.preventDefault();
-				socket.emit('new user', $username.val(), function(data){
+
+				if($username.val().indexOf(' ') !== -1){
+					$errorUsername.html("<b>Erreur</b>: Ce nom d'utilisateur contient des espaces.");
+				}
+				else{
+					socket.emit('new user', $username.val(), function(data){
 					if(data){
 						$userFormArea.hide();
 						$messageArea.show();
 						$message.focus();
 					}
 					else{
-						$errorUsername.html("Ce nom d'utilisateur est déjà pris.");
+						$errorUsername.html("<b>Erreur</b>: Ce nom d'utilisateur est déjà pris.");
 					}
 				});
 				$username.val('');
+				}
 			});
 
 			socket.on('get users', function(data){
