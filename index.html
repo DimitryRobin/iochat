@@ -8,9 +8,29 @@
 		body{
 			margin-top:30px;
 		}
-
 		#messageArea{
 			display:none;
+		}
+		#errorUsername{
+			color:red;
+		}
+
+		#usersOnline{
+			margin: 10 50 5px;
+		}
+		#error{
+			color:red;
+		}
+		#whisper{
+			color:#337ab7;
+			font-style: italic;
+		}
+		#whisperExpediteur{
+			color:#337ab7;
+			font-style: italic;
+		}
+		#system{
+			color:green;
 		}
 	</style>	
 </head>
@@ -21,18 +41,35 @@
 				<form id="userForm">
 					<div class="form-group">
 						<label>Entrez un nom d'utilisateur</label>
-						<input class="form-control" id="username" autofocus required />
+						<p id="errorUsername"></p>
+						<input class="form-control" id="username" placeholder="Ex: toto" autofocus required />
 						<br />
-						<input type="submit" class="btn btn-primary" value="Se connecter">
+						<table>
+							<td>
+								<input type="submit" class="btn btn-primary" value="Se connecter">
+							</td>
+							<td>
+								<p id="usersOnline"></p>
+							</td>
+						</table>
 					</div>
 				</form>
 			</div>
 		</div>
 		<div id="messageArea" class="row">
-			<div class="col-md-4">
+			<div class="utilisateurs">
 				<div class="well">
 					<h3>Utilisateur(s) en ligne</h3>
 					<ul class="list-group" id="users"></ul>
+				</div>
+			</div>
+			<div class="col-md-4">
+				<div class="well">
+					<h3>Informations utiles</h3>
+					<ul class="list-group">
+						<li class="list-info"><b>Shift+Enter</b> ☞ <i>Retour chariot</i></li>
+						<li class="list-info"><b>/w username message</b> ☞ <i>Chuchoter à quelqu'un</i></li>
+					</ul>
 				</div>
 			</div>
 			<div class="col-md-8">
@@ -41,7 +78,7 @@
 				<form id="messageForm">
 					<div class="form-group">
 						<label>Entrez un message</label>
-						<textarea class="form-control" id="message" required></textarea>
+						<textarea class="form-control" id="message" placeholder="Votre texte ici.." required></textarea>
 						<br />
 						<input type="submit" class="btn btn-primary" value="Envoyer">
 					</div>
@@ -52,7 +89,7 @@
 
 	<script>
 		$(function(){
-			var socket = io.connect('http://10.2.8.32:8080');
+			var socket = io.connect('http://192.168.1.19:8080');
 			var $messageForm = $('#messageForm');
 			var $message = $('#message');
 			var $chat = $('#chat');
@@ -61,6 +98,8 @@
 			var $userForm = $('#userForm');
 			var $users = $('#users');
 			var $username = $('#username');	
+			var $errorUsername = $('#errorUsername');
+			var $usersOnline = $('#usersOnline');
 
 			// Pour éviter le spam et les chaines vides
         	var lastMessage = '';
@@ -80,12 +119,18 @@
 				}
 			});		
 
+			$messageForm.load()
+
 			$messageForm.submit(function(e){
 				var msg = $message.val();
             	if(msg && msg != lastMessage){
 	                lastMessage = msg;
 					e.preventDefault();
-					socket.emit('send message', $message.val().split("\n").join('<br/>'));
+					socket.emit('send message', $message.val().split("\n").join('<br/>'), function(data){
+
+						$chat.append('<div class="well" id="error">'+data+'</div>');
+					});
+            		scrollToBot();
 				}		
 
 				$message.val('');
@@ -97,6 +142,21 @@
             	scrollToBot();
 			});
 
+			socket.on('whisper', function(data){
+				$chat.append('<div class="well" id="whisper"><strong>'+data.user+'</strong> vous a chuchoté: '+data.msg.split("\n").join('<br/>')+'</div>');
+            	scrollToBot();
+			});
+
+			socket.on('whisperExpediteur', function(data){
+				$chat.append('<div class="well" id="whisperExpediteur">Vous chuchotez à <strong>'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'</div>');
+            	scrollToBot();
+			});
+
+			socket.on('system', function(data){
+				$chat.append('<div class="well" id="system"><strong>'+data.user+'</strong> '+data.msg.split("\n").join('<br/>')+'</div>');
+            	scrollToBot();
+			});
+
 			$userForm.submit(function(e){
 				e.preventDefault();
 				socket.emit('new user', $username.val(), function(data){
@@ -104,6 +164,9 @@
 						$userFormArea.hide();
 						$messageArea.show();
 						$message.focus();
+					}
+					else{
+						$errorUsername.html("Ce nom d'utilisateur est déjà pris.");
 					}
 				});
 				$username.val('');
@@ -116,6 +179,14 @@
 					html += '<li class="list-group-item">'+data[i]+'</li>';
 				}
 				$users.html(html);
+
+				if(i==0){
+					$usersOnline.html("<b>Aucun</b> utilisateur n'est connecté.");
+				} else if(i==1){
+					$usersOnline.html("<b>"+i+"</b> utilisateur est connecté.");
+				} else{
+					$usersOnline.html("<b>"+i+"</b> utilisateurs sont connectés.");
+				}
 			});
 		});
 
