@@ -36,14 +36,13 @@
 			float :right;
     		color: #cacaca;
 		}
-<<<<<<< HEAD
 		.typing{
 			color:#cacaca;
 			float:right;
 			font-style: italic;
 			display: none;
-=======
-		.btn-user{
+		}
+		.btnUser{
 			color: #373a3c;
 		    background-color: #fff;
 		    border-color: #ccc;
@@ -52,7 +51,6 @@
 		}
 		.user-msg{
 			cursor: pointer;
->>>>>>> origin/master
 		}
 	</style>	
 </head>
@@ -248,14 +246,8 @@
 				var html = '';
 				for (i = 0; i< data.length; i++)
 				{
-<<<<<<< HEAD
-					//html += "<li class='list-group-item'>"+data[i]+"<span class='typing'>est en train d'écrire..</span></li>";
-					html += '<li class="list-group-item" id="' + data[i] + '">'+data[i]+'<span class="typing">est en train d\'écrire..</span></li>';
-					//$users.append($('<li class="' + data[i] + '">').html(data[i] + '<span class="typing">typing</span>'));
-=======
-					//html += '<li class="list-group-item">'+data[i]+'</li>';
-					html += '<button type="button" class="btn btn-user" name="user" onclick="chuchoter(this)">'+data[i]+'</button>';
->>>>>>> origin/master
+					html += '<li onclick="chuchoter(this)" class="user-msg list-group-item" id="' + data[i] + '">'+data[i]+'<span class="typing">est en train d\'écrire..</span></li>';
+					//html += '<button type="button" class="btn btn-user" name="user" onclick="chuchoter(this)">'+data[i]+'</button>';
 				}
 				$users.html(html);
 
@@ -270,8 +262,24 @@
 		});
 
 		function chuchoter(user){
-			$('#message').val("/w "+$(user).text()+" "+$('#message').val());
-			$('#message').focus();
+			
+			if($(user).text().indexOf('est en train') !== -1){
+				var result = $(user).text().indexOf('est en train d\'écrire..');
+				var msg = $(user).text().substring(0, result);
+
+				if($('#message').val().indexOf("/w "+msg+" ") === -1){
+					$('#message').val("/w "+msg+" "+$('#message').val());
+					$('#message').focus();
+				} else{
+					$('#message').focus();
+				}
+			} 
+			else if($('#message').val().indexOf("/w "+$(user).text()+" ") === -1){
+					$('#message').val("/w "+$(user).text()+" "+$('#message').val());
+					$('#message').focus();
+				} else{
+					$('#message').focus();
+				}
 		};
 
         function scrollToBot(){
