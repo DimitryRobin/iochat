@@ -8,6 +8,8 @@ var sqlite3 = require('sqlite3');
 var db = new sqlite3.Database('link.db');
 users = {};
 connections = [];
+var typingUsers = [];
+var colors = require('colors');  
 
 server.listen(process.env.PORT || 8080);
 console.log('Server running..');
@@ -24,37 +26,53 @@ io.sockets.on('connection', function(socket){
 	// Disconnect
 	socket.on('disconnect', function(data){
 		if(!socket.username) return;
+
+		// Si jamais il était en train de saisir un texte, on l'enlève de la liste
+	      var typingUserIndex = typingUsers.indexOf(socket.username);
+	      if (typingUserIndex !== -1) {
+	        typingUsers.splice(typingUserIndex, 1);
+	      }
+
 		delete users[socket.username];
 		updateUsernames();
 		var date = new Date();
        	var horodatage = addZero(date.getHours()) + 'h' + addZero(date.getMinutes());
 		connections.splice(connections.indexOf(socket), 1);
-		console.log('Déconnexion de '+socket.username+': %s personne(s) connectée(s)', connections.length);
+		console.log('[DECONNEXION]'.yellow+' '+socket.username+': %s personne(s) connectée(s)', connections.length);
 		io.sockets.emit('system', {msg: "a quitté le tchat.", user: socket.username, horodatage: horodatage});
 	});
 	
 	// Send Message
 	socket.on('send message', function(data, horodatage, callback){
 		var msg = data.trim();
-		if(msg.substring(0, 3) === '/w '){
-			msg = msg.substr(3);
-			var ind = msg.indexOf(' ');
-			if(ind !== -1){
-				var name = msg.substring(0, ind);
-				var msg = msg.substring(ind + 1);
-				if(name in users){
-					users[name].emit('whisper', {msg: msg, user: socket.username, horodatage: horodatage});
-					users[socket.username].emit('whisperExpediteur', {msg: msg, user: name, horodatage: horodatage});
-					console.log('Chuchotement de '+socket.username+' à '+name+'. Message: '+msg);
+		if(msg.indexOf('<') === -1){
+			if(msg.substring(0, 3) === '/w '){
+				msg = msg.substr(3);
+				var ind = msg.indexOf(' ');
+				if(ind !== -1){
+					var name = msg.substring(0, ind);
+					var msg = msg.substring(ind + 1);
+					if(name in users){
+						if(name != socket.username){
+							users[name].emit('whisper', {msg: msg, user: socket.username, horodatage: horodatage});
+							users[socket.username].emit('whisperExpediteur', {msg: msg, user: name, horodatage: horodatage});
+							console.log('[CHUCHOTEMENT]'.cyan+' De '+socket.username+' à '+name+'. Message: '+msg);
+						} else{
+							callback("<b>Erreur</b>: Vous ne pouvez pas vous chuchoter vous même.<span class='heure'>"+horodatage+"</span>");
+						}
+					} else{
+						callback("<b>Erreur</b>: Entrez un utilisateur valide.<span class='heure'>"+horodatage+"</span>");
+					}
 				} else{
-					callback("<b>Erreur</b>: Entrez un utilisateur valide.");
+					callback("<b>Erreur</b>: Entrez un message valide s'il vous plaît.<span class='heure'>"+horodatage+"</span>")
 				}
 			} else{
-				callback("<b>Erreur</b>: Entrez un message valide s'il vous plaît.")
+				io.sockets.emit('new message', {msg: msg, user: socket.username, horodatage: horodatage});
+				console.log("[VALIDE]".green+" Message de "+socket.username+": "+msg);
 			}
 		} else{
-			io.sockets.emit('new message', {msg: msg, user: socket.username, horodatage: horodatage});
-			console.log('Message de '+socket.username+': '+msg);
+			callback("<b>Petit malin</b>, ça ne marche pas :p<span class='heure'>"+horodatage+"</span>");
+			console.log("[INVALIDE]".red+" Message de "+socket.username+": "+msg);
 		}
 	});
 
@@ -67,7 +85,7 @@ io.sockets.on('connection', function(socket){
 	        var date = new Date();
        		var horodatage = addZero(date.getHours()) + 'h' + addZero(date.getMinutes());
 			connections.push(socket);
-			console.log('Connexion de '+data+': %s personne(s) connectée(s)', connections.length);
+			console.log('[CONNEXION]'.yellow+' '+data+': %s personne(s) connectée(s)', connections.length);
 			callback(true);
 			socket.username = data;
 			users[socket.username] = socket;
@@ -75,6 +93,32 @@ io.sockets.on('connection', function(socket){
 			io.sockets.emit('system', {msg: "a rejoint le tchat.", user: socket.username, horodatage: horodatage});
 		}
 	});
+
+	 /**
+	   * Réception de l'événement 'start-typing'
+	   * L'utilisateur commence à saisir son message
+	   */
+    socket.on('start-typing', function(data) {
+	    // Ajout du user à la liste des utilisateurs en cours de saisie
+	    if (typingUsers.indexOf(socket.username) === -1) {
+	        typingUsers.push(socket.username);
+	    	//console.log('longueur start : ' + typingUsers.length);
+	    }
+	    io.sockets.emit('update-typing', typingUsers);
+	  });
+
+	  /**
+	   * Réception de l'événement 'stop-typing'
+	   * L'utilisateur a arrêter de saisir son message
+	   */
+	socket.on('stop-typing', function () {
+	    var typingUserIndex = typingUsers.indexOf(socket.username);
+	    if (typingUserIndex !== -1) {
+	        typingUsers.splice(typingUserIndex, 1);	
+			//console.log('longueur stop : ' + typingUsers.length);
+	    }
+	    io.sockets.emit('update-typing', typingUsers);
+	  });
 
 	function updateUsernames(){
 		io.sockets.emit('get users', Object.keys(users));

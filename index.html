@@ -36,6 +36,12 @@
 			float :right;
     		color: #cacaca;
 		}
+		.typing{
+			color:#cacaca;
+			float:right;
+			font-style: italic;
+			display: none;
+		}
 	</style>	
 </head>
 <body>
@@ -46,7 +52,7 @@
 					<div class="form-group">
 						<label>Entrez un nom d'utilisateur</label>
 						<p id="errorUsername"></p>
-						<input class="form-control" id="username" placeholder="Ex: toto" autofocus required />
+						<input class="form-control" id="username" placeholder="Ex: toto" maxlength="30" autofocus required />
 						<br />
 						<table>
 							<td>
@@ -64,7 +70,8 @@
 			<div class="utilisateurs">
 				<div class="well">
 					<h3>Utilisateur(s) en ligne</h3>
-					<ul class="list-group" id="users"></ul>
+					<ul class="list-group" id="users">
+					</ul>
 				</div>
 			</div>
 			<div class="col-md-4">
@@ -94,7 +101,8 @@
 
 	<script>
 		$(function(){
-			var socket = io.connect('http://10.2.8.32:8080');
+			//var socket = io.connect('http://10.2.8.32:8080');
+			var socket = io.connect('http://192.168.1.19:8080');
 			var $messageForm = $('#messageForm');
 			var $message = $('#message');
 			var $chat = $('#chat');
@@ -106,9 +114,41 @@
 			var $errorUsername = $('#errorUsername');
 			var $usersOnline = $('#usersOnline');
 			var $heure = $('.heure');
+			var $typing = $('.typing');
+			var typingTimer;  
+			var isTyping = false;	
 
 			// Pour éviter le spam et les chaines vides
         	var lastMessage = '';
+
+        	$message.keypress(function () {
+			    clearTimeout(typingTimer);
+			    if (!isTyping) {
+			    	socket.emit('start-typing');
+			    	isTyping = true;
+			  }
+			});
+
+			$message.keyup(function () {
+				clearTimeout(typingTimer);
+			    typingTimer = setTimeout(function () {
+			    if (isTyping) {
+			        socket.emit('stop-typing');
+			        isTyping = false;
+			    }
+			  }, 500);
+			});
+
+			/**
+			 * Gestion saisie des autres utilisateurs
+			 */
+			socket.on('update-typing', function(typingUsers) {  
+			    $('#users li span.typing').hide();
+			   	//console.log('nb de personne en train d ecrire : ' + typingUsers.length);
+			    for (i = 0; i < typingUsers.length; i++) {
+			        $('#users li#' + typingUsers[i] + ' span.typing').show();
+			  }
+			});
 
 			$message.keydown(function(event){ 
 				if (event.keyCode == 13){        
@@ -123,30 +163,25 @@
 			        	} 			            
 			        }
 				}
-			});		
+			});	
 
 			$messageForm.submit(function(e){
 				var msg = $message.val();
 	            var date = new Date();
            		var horodatage = addZero(date.getHours()) + 'h' + addZero(date.getMinutes());
             	if(msg && msg.trim() != ""){
-            		if(msg.indexOf('<script') === -1 && msg.indexOf('<br') === -1 && msg.indexOf('</br') === -1 && msg.indexOf('<a') === -1 && msg.indexOf('<b') === -1 && msg.indexOf('<i') === -1 && msg.indexOf('<body') === -1 && msg.indexOf('<html') === -1 && msg.indexOf('<input') === -1 && msg.indexOf('<textarea') === -1 && msg.indexOf('<u') === -1 && msg.indexOf('<h') === -1 && msg.indexOf('<img') === -1 && msg.indexOf('<label') === -1 && msg.indexOf('<link') === -1 && msg.indexOf('<iframe') === -1 && msg.indexOf('<frame') === -1 && msg.indexOf('<form') === -1 && msg.indexOf('<div') === -1 && msg.indexOf('<span') === -1 && msg.indexOf('<em') === -1 && msg.indexOf('<cite') === -1 && msg.indexOf('<code') === -1 && msg.indexOf('<center') === -1 && msg.indexOf('<caption') === -1 && msg.indexOf('<blink') === -1 && msg.indexOf('<blockquote') === -1 && msg.indexOf('<area') === -1 && msg.indexOf('<abbr') === -1 && msg.indexOf('<!--') === -1 && msg.indexOf('<!doctype') === -1 && msg.indexOf('<address') === -1 && msg.indexOf('<button') === -1 && msg.indexOf('<fieldset') === -1 && msg.indexOf('<font') === -1 && msg.indexOf('<head') === -1 && msg.indexOf('<li') === -1 && msg.indexOf('<marquee') === -1 && msg.indexOf('<ol') === -1 && msg.indexOf('<meta') === -1 && msg.indexOf('<pre') === -1 && msg.indexOf('<q') === -1 && msg.indexOf('<s') === -1 && msg.indexOf('<strike') === -1 && msg.indexOf('<strong') === -1 && msg.indexOf('<style') === -1 && msg.indexOf('<sub') === -1 && msg.indexOf('<sup') === -1 && msg.indexOf('<table') === -1 && msg.indexOf('<td') === -1 && msg.indexOf('<tr') === -1 && msg.indexOf('<th') === -1 && msg.indexOf('<title') === -1 && msg.indexOf('<var') === -1){
-            			if(msg != lastMessage){
-		                	lastMessage = msg;
-							e.preventDefault();
-							socket.emit('send message', $message.val().split("\n").join('<br/>'), horodatage, function(data){
-								$chat.append('<div class="well" id="error">'+data+'<span class="heure">'+data.horodatage+'</span></div>');
-		            			scrollToBot();	
-							});
-		                } else{
-		                	$chat.append('<div class="well" id="error"><b>Erreur</b>: Le message est le même que le précédent.<span class="heure">'+horodatage+'</span></div>');
-		            		scrollToBot();	
-		                }
-            		} else{
-            			$chat.append('<div class="well" id="error"><b>Petit malin</b>, ça ne marche pas :p<span class="heure">'+horodatage+'</span></div>');
-	            		scrollToBot();	
-            		}
-				} else{
+            		if(msg != lastMessage){
+		               	lastMessage = msg;
+						e.preventDefault();
+						socket.emit('send message', $message.val().split("\n").join('<br/>'), horodatage, function(data){
+							$chat.append('<div class="well" id="error">'+data+'</div>');
+	            			scrollToBot();	
+						});
+	                } else{
+	                	$chat.append('<div class="well" id="error"><b>Erreur</b>: Le message est le même que le précédent.<span class="heure">'+horodatage+'</span></div>');
+		           		scrollToBot();	
+		            }	
+            	} else{
 					$chat.append('<div class="well" id="error"><b>Erreur</b>: Le message est vide.<span class="heure">'+horodatage+'</span></div>');
 	            	scrollToBot();	
 				}
@@ -200,7 +235,9 @@
 				var html = '';
 				for (i = 0; i< data.length; i++)
 				{
-					html += '<li class="list-group-item">'+data[i]+'</li>';
+					//html += "<li class='list-group-item'>"+data[i]+"<span class='typing'>est en train d'écrire..</span></li>";
+					html += '<li class="list-group-item" id="' + data[i] + '">'+data[i]+'<span class="typing">est en train d\'écrire..</span></li>';
+					//$users.append($('<li class="' + data[i] + '">').html(data[i] + '<span class="typing">typing</span>'));
 				}
 				$users.html(html);
 
