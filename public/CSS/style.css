@@ -1422,14 +1422,34 @@ pre code {
 		width: 750px
 	}
 }
-@media (min-width:992px) {
+@media (min-width:1050px) {
 	.container {
-		width: 970px
+		width: 870px
 	}
 }
 @media (min-width:1200px) {
 	.container {
+		width: 970px
+	}
+}
+@media (min-width:1300px) {
+	.container {
+		width: 1070px
+	}
+}
+@media (min-width:1400px) {
+	.container {
 		width: 1170px
+	}
+}
+@media (min-width:1500px) {
+	.container {
+		width: 1270px
+	}
+}
+@media (min-width:1600px) {
+	.container {
+		width: 1370px
 	}
 }
 .container-fluid {
@@ -4541,7 +4561,7 @@ a.thumbnail.active, a.thumbnail:focus, a.thumbnail:hover {
     color: #cacaca;
     border-top-right-radius: 10px;
     border-bottom-left-radius: 10px;
-    width: 350px
+    width: auto
 }
 .list-group-item:first-child {
 	border-top-left-radius: 4px;
