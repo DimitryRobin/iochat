@@ -41,6 +41,10 @@
 		    background-color: #fff;
 		    border-color: #ccc;
 		    width: 100%;
+			text-align: left;
+		}
+		.user-msg{
+			cursor: pointer;
 		}
 	</style>	
 </head>
@@ -163,22 +167,22 @@
 			});
 
 			socket.on('new message', function(data){
-				$chat.append('<div class="well"><strong>'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+				$chat.append('<div class="well"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
 
 			socket.on('whisper', function(data){
-				$chat.append('<div class="well" id="whisper"><strong>'+data.user+'</strong> vous a chuchoté: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+				$chat.append('<div class="well" id="whisper"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong> vous a chuchoté: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
 
 			socket.on('whisperExpediteur', function(data){
-				$chat.append('<div class="well" id="whisperExpediteur">Vous chuchotez à <strong>'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+				$chat.append('<div class="well" id="whisperExpediteur">Vous chuchotez à <strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
 
 			socket.on('system', function(data){
-				$chat.append('<div class="well" id="system"><strong>'+data.user+'</strong> '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+				$chat.append('<div class="well" id="system"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong> '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
 
