@@ -36,6 +36,12 @@
 			float :right;
     		color: #cacaca;
 		}
+		.btn-user{
+			color: #373a3c;
+		    background-color: #fff;
+		    border-color: #ccc;
+		    width: 100%;
+		}
 	</style>	
 </head>
 <body>
@@ -102,7 +108,8 @@
 			var $userFormArea = $('#userFormArea');
 			var $userForm = $('#userForm');
 			var $users = $('#users');
-			var $username = $('#username');	
+			var $username = $('#username');
+			var $user = $('.btn-user'); //Bouton d'user
 			var $errorUsername = $('#errorUsername');
 			var $usersOnline = $('#usersOnline');
 			var $heure = $('.heure');
@@ -200,7 +207,8 @@
 				var html = '';
 				for (i = 0; i< data.length; i++)
 				{
-					html += '<li class="list-group-item">'+data[i]+'</li>';
+					//html += '<li class="list-group-item">'+data[i]+'</li>';
+					html += '<button type="button" class="btn btn-user" name="user" onclick="chuchoter(this)">'+data[i]+'</button>';
 				}
 				$users.html(html);
 
@@ -213,6 +221,11 @@
 				}
 			});
 		});
+
+		function chuchoter(user){
+			$('#message').val("/w "+$(user).text()+" "+$('#message').val());
+			$('#message').focus();
+		};
 
         function scrollToBot(){
             $('body').scrollTop($(document).height());
