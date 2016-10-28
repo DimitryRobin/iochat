@@ -12,17 +12,10 @@ connections = [];
 server.listen(process.env.PORT || 8080);
 console.log('Server running..');
 
-app.set('views', 'views');
-app.set('view engine', 'hbs');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-    extended: false
-}));
-app.use(cookieParser());
 app.use(express.static('public'));
 
-app.get('/', function(req, res){
-    res.render('index.hbs');
+app.get('/', function(req, res) {
+	res.sendFile(__dirname + '/index.html')
 });
 
 io.sockets.on('connection', function(socket){
