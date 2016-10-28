@@ -36,11 +36,23 @@
 			float :right;
     		color: #cacaca;
 		}
+<<<<<<< HEAD
 		.typing{
 			color:#cacaca;
 			float:right;
 			font-style: italic;
 			display: none;
+=======
+		.btn-user{
+			color: #373a3c;
+		    background-color: #fff;
+		    border-color: #ccc;
+		    width: 100%;
+			text-align: left;
+		}
+		.user-msg{
+			cursor: pointer;
+>>>>>>> origin/master
 		}
 	</style>	
 </head>
@@ -110,7 +122,8 @@
 			var $userFormArea = $('#userFormArea');
 			var $userForm = $('#userForm');
 			var $users = $('#users');
-			var $username = $('#username');	
+			var $username = $('#username');
+			var $user = $('.btn-user'); //Bouton d'user
 			var $errorUsername = $('#errorUsername');
 			var $usersOnline = $('#usersOnline');
 			var $heure = $('.heure');
@@ -191,22 +204,22 @@
 			});
 
 			socket.on('new message', function(data){
-				$chat.append('<div class="well"><strong>'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+				$chat.append('<div class="well"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
 
 			socket.on('whisper', function(data){
-				$chat.append('<div class="well" id="whisper"><strong>'+data.user+'</strong> vous a chuchoté: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+				$chat.append('<div class="well" id="whisper"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong> vous a chuchoté: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
 
 			socket.on('whisperExpediteur', function(data){
-				$chat.append('<div class="well" id="whisperExpediteur">Vous chuchotez à <strong>'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+				$chat.append('<div class="well" id="whisperExpediteur">Vous chuchotez à <strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
 
 			socket.on('system', function(data){
-				$chat.append('<div class="well" id="system"><strong>'+data.user+'</strong> '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+				$chat.append('<div class="well" id="system"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong> '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
 
@@ -235,9 +248,14 @@
 				var html = '';
 				for (i = 0; i< data.length; i++)
 				{
+<<<<<<< HEAD
 					//html += "<li class='list-group-item'>"+data[i]+"<span class='typing'>est en train d'écrire..</span></li>";
 					html += '<li class="list-group-item" id="' + data[i] + '">'+data[i]+'<span class="typing">est en train d\'écrire..</span></li>';
 					//$users.append($('<li class="' + data[i] + '">').html(data[i] + '<span class="typing">typing</span>'));
+=======
+					//html += '<li class="list-group-item">'+data[i]+'</li>';
+					html += '<button type="button" class="btn btn-user" name="user" onclick="chuchoter(this)">'+data[i]+'</button>';
+>>>>>>> origin/master
 				}
 				$users.html(html);
 
@@ -250,6 +268,11 @@
 				}
 			});
 		});
+
+		function chuchoter(user){
+			$('#message').val("/w "+$(user).text()+" "+$('#message').val());
+			$('#message').focus();
+		};
 
         function scrollToBot(){
             $('body').scrollTop($(document).height());
