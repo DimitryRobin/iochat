@@ -3,55 +3,9 @@
 	<title>IO Chat</title>
     <link rel='stylesheet' type="text/css" href='/CSS/style.css'/>
 	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script type="text/javascript" src="http://js.nicedit.com/nicEdit-latest.js"></script> 
 	<script src="/socket.io/socket.io.js"></script>
 	<style type="text/css">
-		body{
-			margin-top:30px;
-		}
-		#messageArea{
-			display:none;
-		}
-		#errorUsername{
-			color:red;
-		}
-
-		#usersOnline{
-			margin: 10 50 5px;
-		}
-		#error{
-			color:red;
-		}
-		#whisper{
-			color:#337ab7;
-			font-style: italic;
-		}
-		#whisperExpediteur{
-			color:#337ab7;
-			font-style: italic;
-		}
-		#system{
-			color:green;
-		}
-		.heure{
-			float :right;
-    		color: #cacaca;
-		}
-		.typing{
-			color:#cacaca;
-			float:right;
-			font-style: italic;
-			display: none;
-		}
-		.btnUser{
-			color: #373a3c;
-		    background-color: #fff;
-		    border-color: #ccc;
-		    width: 100%;
-			text-align: left;
-		}
-		.user-msg{
-			cursor: pointer;
-		}
 	</style>	
 </head>
 <body>
@@ -110,9 +64,13 @@
 	</div>
 
 	<script>
+        var bold = 0;
+        var msgFormatte = '';
+
 		$(function(){
 			//var socket = io.connect('http://10.2.8.32:8080');
-			var socket = io.connect('http://192.168.1.19:8080');
+			//var socket = io.connect('http://192.168.1.19:8080');
+			var socket = io.connect('http://192.168.18.1:8080');
 			var $messageForm = $('#messageForm');
 			var $message = $('#message');
 			var $chat = $('#chat');
@@ -127,12 +85,14 @@
 			var $heure = $('.heure');
 			var $typing = $('.typing');
 			var typingTimer;  
-			var isTyping = false;	
+			var isTyping = false;
+			var $usernameSaving = '';
 
 			// Pour éviter le spam et les chaines vides
         	var lastMessage = '';
 
         	$message.keypress(function () {
+        		msgFormatte += String.fromCharCode(event.keyCode);
 			    clearTimeout(typingTimer);
 			    if (!isTyping) {
 			    	socket.emit('start-typing');
@@ -162,6 +122,10 @@
 			});
 
 			$message.keydown(function(event){ 
+				if($message.val().length == 0){
+					msgFormatte = '';
+				}
+
 				if (event.keyCode == 13){        
 			        if(event.shiftKey){
 			            event.stopPropagation();
@@ -184,7 +148,8 @@
             		if(msg != lastMessage){
 		               	lastMessage = msg;
 						e.preventDefault();
-						socket.emit('send message', $message.val().split("\n").join('<br/>'), horodatage, function(data){
+						console.log(msgFormatte);
+						socket.emit('send message', msgFormatte, horodatage, function(data){ // $message.val().split("\n").join('<br/>')
 							$chat.append('<div class="well" id="error">'+data+'</div>');
 	            			scrollToBot();	
 						});
@@ -202,8 +167,13 @@
 			});
 
 			socket.on('new message', function(data){
-				$chat.append('<div class="well"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
-            	scrollToBot();
+				if(data.user == $usernameSaving){
+					$chat.append('<div class="well"><strong class="user-msg" style="cursor: default;">'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+	            	scrollToBot();
+            	} else{
+            		$chat.append('<div class="well"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+	            	scrollToBot();
+            	}
 			});
 
 			socket.on('whisper', function(data){
@@ -217,8 +187,13 @@
 			});
 
 			socket.on('system', function(data){
-				$chat.append('<div class="well" id="system"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong> '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
-            	scrollToBot();
+				if(data.user == $usernameSaving){
+					$chat.append('<div class="well" id="system"><strong class="user-msg" style="cursor: default;">'+data.user+'</strong> '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+	            	scrollToBot();
+            	} else{
+            		$chat.append('<div class="well" id="system"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong> '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
+	            	scrollToBot();
+            	}
 			});
 
 			$userForm.submit(function(e){
@@ -238,6 +213,7 @@
 						$errorUsername.html("<b>Erreur</b>: Ce nom d'utilisateur est déjà pris.");
 					}
 				});
+				$usernameSaving = $username.val();
 				$username.val('');
 				}
 			});
@@ -246,8 +222,11 @@
 				var html = '';
 				for (i = 0; i< data.length; i++)
 				{
-					html += '<li onclick="chuchoter(this)" class="user-msg list-group-item" id="' + data[i] + '">'+data[i]+'<span class="typing">est en train d\'écrire..</span></li>';
-					//html += '<button type="button" class="btn btn-user" name="user" onclick="chuchoter(this)">'+data[i]+'</button>';
+					if(data[i] == $usernameSaving){
+						html += '<li class="user-msg list-group-item" id="' + data[i] + '" style="background-color: rgba(51, 122, 183, 0.09); cursor: default;">'+data[i]+'<span class="typing">est en train d\'écrire..</span></li>';
+					} else{
+						html += '<li onclick="chuchoter(this)" class="user-msg list-group-item" id="' + data[i] + '" >'+data[i]+'<span class="typing">est en train d\'écrire..</span></li>';
+					}
 				}
 				$users.html(html);
 
@@ -287,11 +266,61 @@
         }
 
         function addZero(i) {
-        if (i < 10) {
-            i = "0" + i;
-        }   
+	        if (i < 10) {
+	            i = "0" + i;
+	        }   
         return i;
         }
+
+        function fontStyle(style){
+        	var x = document.getElementById(style);
+        	var y = document.getElementById("message");
+
+        	if(x.style.border.indexOf("2px solid rgb(51, 122, 183)") !== -1){
+        		x.style.border = "";
+        	} else{
+        		x.style.border = "2px solid #337ab7";
+        	}
+        	
+        	if(style == 'gras'){
+        		/*
+        		if(y.style.fontWeight.indexOf("bold") !== -1){
+        			y.style.fontWeight = "";
+        		} else{
+        			y.style.fontWeight = "bold";
+        		}
+        		*/
+        		
+        		if(bold == 0){
+        			msgFormatte += '<b>';	
+        			bold = 1;
+        		} else{
+        			msgFormatte += '</b>';	
+        			bold = 0;
+        		}        		
+        	}
+
+        	if(style == 'italique'){
+        		if(y.style.fontStyle.indexOf("italic") !== -1){
+        			y.style.fontStyle = "";
+        		} else{
+        			y.style.fontStyle = "italic";
+        		}
+        	} 
+
+        	/*
+        	if(style == 'souligne'){
+        		if(y.style.fontStyle.indexOf("italic") !== -1){
+        			y.style.fontStyle = "";
+        		} else{
+        			y.style.fontStyle = "italic";
+        		}
+        	}
+        	*/
+
+        	y.focus();
+        }
+
 	</script>
 </body>
 </html>

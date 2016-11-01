@@ -11,7 +11,7 @@ html {
 	-ms-text-size-adjust: 100%
 }
 body {
-	margin: 0
+	margin-top:30px;
 }
 article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
 	display: block
@@ -1450,6 +1450,26 @@ pre code {
 @media (min-width:1600px) {
 	.container {
 		width: 1370px
+	}
+}
+@media (min-width:1700px) {
+	.container {
+		width: 1470px
+	}
+}
+@media (min-width:1800px) {
+	.container {
+		width: 1570px
+	}
+}
+@media (min-width:1900px) {
+	.container {
+		width: 1670px
+	}
+}
+@media (min-width:2000px) {
+	.container {
+		width: 1770px
 	}
 }
 .container-fluid {
@@ -5816,6 +5836,50 @@ button.close {
 	.hidden-print {
 		display: none !important
 	}
+}
+#messageArea{
+	display:none;
+}
+#errorUsername{
+	color:red;
+}
+
+#usersOnline{
+	margin: 10 50 5px;
+}
+#error{
+	color:red;
+}
+#whisper{
+	color:#337ab7;
+	font-style: italic;
+}
+#whisperExpediteur{
+	color:#337ab7;
+	font-style: italic;
+}
+#system{
+	color:green;
+}
+.heure{
+	float :right;
+	color: #cacaca;
+}
+.typing{
+	color:#cacaca;
+	float:right;
+	font-style: italic;
+	display: none;
+}
+.btnUser{
+	color: #373a3c;
+    background-color: #fff;
+    border-color: #ccc;
+    width: 100%;
+	text-align: left;
+}
+.user-msg{
+	cursor: pointer;
 }
 
 /*# sourceMappingURL=bootstrap.min.css.map */

@@ -45,7 +45,7 @@ io.sockets.on('connection', function(socket){
 	// Send Message
 	socket.on('send message', function(data, horodatage, callback){
 		var msg = data.trim();
-		if(msg.indexOf('<') === -1){
+		if(msg.indexOf('<fghdfhdf') === -1){
 			if(msg.substring(0, 3) === '/w '){
 				msg = msg.substr(3);
 				var ind = msg.indexOf(' ');
@@ -105,7 +105,7 @@ io.sockets.on('connection', function(socket){
 	    	//console.log('longueur start : ' + typingUsers.length);
 	    }
 	    io.sockets.emit('update-typing', typingUsers);
-	  });
+	});
 
 	  /**
 	   * Réception de l'événement 'stop-typing'
@@ -118,7 +118,7 @@ io.sockets.on('connection', function(socket){
 			//console.log('longueur stop : ' + typingUsers.length);
 	    }
 	    io.sockets.emit('update-typing', typingUsers);
-	  });
+	});
 
 	function updateUsernames(){
 		io.sockets.emit('get users', Object.keys(users));
