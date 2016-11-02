@@ -1058,7 +1058,8 @@ figure {
 	margin: 0
 }
 img {
-	vertical-align: middle
+	vertical-align: middle;
+	cursor: pointer;
 }
 .carousel-inner>.item>a>img, .carousel-inner>.item>img, .img-responsive, .thumbnail a>img, .thumbnail>img {
 	display: block;
@@ -5881,5 +5882,8 @@ button.close {
 .user-msg{
 	cursor: pointer;
 }
-
+#textEditor{
+	width: 100%;
+    margin-bottom: 3px;
+}
 /*# sourceMappingURL=bootstrap.min.css.map */

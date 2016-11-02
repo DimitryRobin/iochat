@@ -54,6 +54,12 @@
 				<form id="messageForm">
 					<div class="form-group">
 						<label>Entrez un message</label>
+						<div id="textEditor">
+							<img onclick="fontStyle(this.id)" name="bold" id="bold" src="ressources/gras.png" alt="Bold" />
+							<img onclick="fontStyle(this.id)" name="italique" id="italique" src="ressources/italique.png" alt="italique" />
+							<img onclick="fontStyle(this.id)" name="souligne" id="souligne" src="ressources/souligne.png" alt="souligne" />
+							<img onclick="fontStyle(this.id)" name="barre" id="barre" src="ressources/barre.png" alt="barre" />
+						</div>
 						<textarea class="form-control" id="message" placeholder="Votre texte ici.." required></textarea>
 						<br />
 						<input type="submit" class="btn btn-primary" value="Envoyer">
@@ -64,13 +70,11 @@
 	</div>
 
 	<script>
-        var bold = 0;
-        var msgFormatte = '';
 
 		$(function(){
-			//var socket = io.connect('http://10.2.8.32:8080');
+			var socket = io.connect('http://10.2.8.15:8080');
 			//var socket = io.connect('http://192.168.1.19:8080');
-			var socket = io.connect('http://192.168.18.1:8080');
+			//var socket = io.connect('http://192.168.18.1:8080');
 			var $messageForm = $('#messageForm');
 			var $message = $('#message');
 			var $chat = $('#chat');
@@ -92,7 +96,6 @@
         	var lastMessage = '';
 
         	$message.keypress(function () {
-        		msgFormatte += String.fromCharCode(event.keyCode);
 			    clearTimeout(typingTimer);
 			    if (!isTyping) {
 			    	socket.emit('start-typing');
@@ -121,10 +124,7 @@
 			  }
 			});
 
-			$message.keydown(function(event){ 
-				if($message.val().length == 0){
-					msgFormatte = '';
-				}
+			$message.keydown(function(event){
 
 				if (event.keyCode == 13){        
 			        if(event.shiftKey){
@@ -148,8 +148,9 @@
             		if(msg != lastMessage){
 		               	lastMessage = msg;
 						e.preventDefault();
-						console.log(msgFormatte);
-						socket.emit('send message', msgFormatte, horodatage, function(data){ // $message.val().split("\n").join('<br/>')
+
+
+						socket.emit('send message', escapeHtml(msg), horodatage, function(data){ // $message.val().split("\n").join('<br/>')
 							$chat.append('<div class="well" id="error">'+data+'</div>');
 	            			scrollToBot();	
 						});
@@ -168,6 +169,7 @@
 
 			socket.on('new message', function(data){
 				if(data.user == $usernameSaving){
+					data.msg = formatage(data.msg);
 					$chat.append('<div class="well"><strong class="user-msg" style="cursor: default;">'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
 	            	scrollToBot();
             	} else{
@@ -177,11 +179,17 @@
 			});
 
 			socket.on('whisper', function(data){
+				if(data.user == $usernameSaving){
+					data.msg = formatage(data.msg);
+				}
 				$chat.append('<div class="well" id="whisper"><strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong> vous a chuchoté: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
 
 			socket.on('whisperExpediteur', function(data){
+				if(data.user == $usernameSaving){
+					data.msg = formatage(data.msg);
+				}
 				$chat.append('<div class="well" id="whisperExpediteur">Vous chuchotez à <strong class="user-msg" onclick="chuchoter(this)">'+data.user+'</strong>: '+data.msg.split("\n").join('<br/>')+'<span class="heure">'+data.horodatage+'</span></div>');
             	scrollToBot();
 			});
@@ -203,7 +211,7 @@
 					$errorUsername.html("<b>Erreur</b>: Ce nom d'utilisateur contient des espaces.");
 				}
 				else{
-					socket.emit('new user', $username.val(), function(data){
+					socket.emit('new user', escapeHtml($username.val()), function(data){
 					if(data){
 						$userFormArea.hide();
 						$messageArea.show();
@@ -281,23 +289,14 @@
         	} else{
         		x.style.border = "2px solid #337ab7";
         	}
-        	
-        	if(style == 'gras'){
-        		/*
+
+        	if(style == 'bold'){
+        		
         		if(y.style.fontWeight.indexOf("bold") !== -1){
         			y.style.fontWeight = "";
         		} else{
         			y.style.fontWeight = "bold";
-        		}
-        		*/
-        		
-        		if(bold == 0){
-        			msgFormatte += '<b>';	
-        			bold = 1;
-        		} else{
-        			msgFormatte += '</b>';	
-        			bold = 0;
-        		}        		
+        		} 		
         	}
 
         	if(style == 'italique'){
@@ -307,19 +306,75 @@
         			y.style.fontStyle = "italic";
         		}
         	} 
-
-        	/*
+        	
         	if(style == 'souligne'){
-        		if(y.style.fontStyle.indexOf("italic") !== -1){
-        			y.style.fontStyle = "";
+        		if(y.style.textDecoration.indexOf("underline") !== -1){
+        			if(y.style.textDecoration.indexOf("line-through") !== -1){
+	        			y.style.textDecoration = "line-through";
+	        		} else{
+	        			y.style.textDecoration = "";
+	        		}
         		} else{
-        			y.style.fontStyle = "italic";
+        			if(y.style.textDecoration.indexOf("line-through") !== -1){
+	        			y.style.textDecoration = "line-through underline";
+	        		} else{
+	        			y.style.textDecoration = "underline";
+	        		}
         		}
         	}
-        	*/
+
+        	if(style == 'barre'){
+        		if(y.style.textDecoration.indexOf("line-through") !== -1){
+        			if(y.style.textDecoration.indexOf("underline") !== -1){
+	        			y.style.textDecoration = "underline";
+	        		} else{
+	        			y.style.textDecoration = "";
+	        		}
+        		} else{
+        			if(y.style.textDecoration.indexOf("underline") !== -1){
+	        			y.style.textDecoration = "line-through underline";
+	        		} else{
+	        			y.style.textDecoration = "line-through";
+	        		}
+        		}
+        	}
 
         	y.focus();
         }
+
+        function formatage(msg){
+        	var y = document.getElementById("message");
+
+        	if(y.style.fontWeight.indexOf("bold") !== -1){
+					msg = '<b>' + msg + '</b>';
+			}
+
+			if(y.style.fontStyle.indexOf("italic") !== -1){
+					msg = '<i>' + msg + '</i>';
+			}
+
+			if(y.style.textDecoration.indexOf("underline") !== -1){
+					msg = '<u>' + msg + '</u>';
+			}
+
+			if(y.style.textDecoration.indexOf("line-through") !== -1){
+					msg = '<strike>' + msg + '</strike>';
+			}
+
+			return msg;
+        }
+
+        function escapeHtml(text) {
+		  var map = {
+		    '&': '&amp;',
+		    '<': '&lt;',
+		    '>': '&gt;',
+		    '"': '&quot;',
+		    "'": '&#039;'
+		  };
+
+		  return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+		}
 
 	</script>
 </body>
